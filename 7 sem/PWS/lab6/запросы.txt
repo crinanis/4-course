@@ -1,0 +1,20 @@
+student?$filter=id eq 1
+student?$filter=id%20eq%201&$format=json
+student?$select=name&$format=application%2Fatom%2Bxml
+student?$select=Name&$format=json
+student?$orderby=name&$format=json
+student(1)?$format=json
+
+student – таблица
+student(1) – по PK
+student(1)/note – оценки 1-го студента
+note?$filter=note1%20gt%202
+
+/Student?$select=Name&$format=json	вывести нек. поля
+/Student?$expand=Note&$format=json	с помощью expand включить связанные записи
+/Student?$orderby=Name&$format=json	в каком порядке
+note?$filter=note1%20ge%208%20and%20note1%20ne%2010&$format=json
+note?$filter=not%20(note1%20eq%2010)
+ge/le больше или равно/меньше или равно
+ne - not equals
+and or
