@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>lab3</title>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div id="resourceInfo"></div></br>
+
+    <div style="display: flex; flex-direction: column;">
+        Limit: <input style="margin-top:5px; margin-bottom:5px" type="number" id="limit" min="0" max="1000" value="5" />
+
+        <div style="margin-top:5px; margin-bottom:5px">
+            ASC: <input style="margin:5px" name="sort" type="radio" value="asc" id="asc" checked />
+            DESC: <input style="margin:5px" name="sort" type="radio" value="desc" id="desc" />
+        </div>
+
+        Offset: <input style="margin-top:5px; margin-bottom:5px" type="number" id="offset" min="0" max="1000" />
+        Min Id:<input style="margin-top:5px; margin-bottom:5px" type="number" id="minid" min="0" max="1000" />
+        Max Id:<input style="margin-top:5px; margin-bottom:5px" type="number" id="maxid" min="0" max="1000" />
+
+        <label>Columns:</label>
+        <div style="margin-top:5px; margin-bottom:5px">
+            Id: <input name="columnId" type="checkbox" value="id" id="id" />
+            Name: <input name="columnName" type="checkbox" value="name" id="nameC" />
+            Number: <input name="columnNumber" type="checkbox" value="number" id="numberC" />
+        </div>
+
+        Like:<input style="margin-top:5px; margin-bottom:5px" type="text" id="like" />
+        Global like:<input style="margin-top:5px; margin-bottom:5px" type="text" id="globallike" />
+        <div style="margin-top:5px; margin-bottom:5px">
+            JSON: <input style="margin:5px" name="format" type="radio" value="json" id="json" checked />
+            XML: <input style="margin:5px" name="format" type="radio" value="xml" id="xml" />
+        </div>
+
+        <input style="margin-bottom: 5px; margin-top:5px" type="button" onclick="getStudents()" value="GET" />
+    </div>
+
+    Name: <input type="text" id="name" style='margin: 5px' />
+    Number: <input type="text" id="number" />
+
+    <input style='margin: 5px' type='button' onclick='addStudent()' value='ADD' />
+
+    <div id="result2" name="result2" style="width: 100%; height: 100%; font-weight: bold; margin-bottom: 5px; border: 1px solid black;"></div>
+    <div id="result" name="result" style="width: 100%; height: 100%; margin-bottom: 5px;"></div>
+
+    <script>
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/ResourceInfo",
+                type: "GET",
+                success: function (result) {
+                    $("#resourceInfo").html(result);
+                },
+                error: function (error) {
+                    console.error("Error fetching resource info:", error);
+                }
+            });
+        });
+
+        var limit = 5;
+        var page = 0;
+
+        function getStudents() {
+            let data = {};
+            let format;
+            var ele = document.getElementsByName('sort');
+            for (i = 0; i < ele.length; i++) {
+                if (ele[i].checked)
+                    data["sort"] = ele[i].value;
+            }
+            if ($("#limit").val() != "") {
+                data["limit"] = $("#limit").val();
+                this.limit = data["limit"];
+            }
+            else data["limit"] = this.limit;
+            if ($("#offset").val() != "") {
+                var of = $("#offset").val();
+                data["offset"] = this.limit * this.page + parseInt(of);
+            }
+            else data["offset"] = this.limit * this.page;
+            if ($("#minid").val() != "") data["minid"] = $("#minid").val();
+            if ($("#maxid").val() != "") data["maxid"] = $("#maxid").val();
+            if (data["maxid"] < data["minid"]) {
+                $("#result2").html('Error: Max Id < Min Id');
+                return;
+            }
+            data["columns"] = '';
+            ele = document.getElementsByName('columnId');
+            if (ele[0].checked) data["columns"] += 'id,';
+            ele = document.getElementsByName('columnName');
+            if (ele[0].checked) data["columns"] += 'name,';
+            ele = document.getElementsByName('columnNumber');
+            if (ele[0].checked) data["columns"] += 'number';
+
+            if ($("#like").val() != "") data["like"] = $("#like").val();
+            if ($("#globalike").val() != "") data["globallike"] = $("#globallike").val();
+            ele = document.getElementsByName('format');
+            for (i = 0; i < ele.length; i++) {
+                if (ele[i].checked)
+                    format = ele[i].value;
+            }
+            $("#result").html(' ');
+
+            var apiUrl = "/api/Students." + format;
+
+            $.ajax({
+                url: apiUrl,
+                data: data,
+                type: "GET",
+                contentType: format === "xml" ? "application/xml" : "application/json",
+                success: result => {
+                    this.page = 0
+
+                    if (format == "xml") {
+                        let students = result.querySelectorAll("ArrayOfStudentDto StudentDto");
+                        console.log("Number of students:", students.length);
+                        console.log(result);
+                        this.generateList(result);
+                    } else {
+                        if (result.error) {
+                            $("#result2").html(result.error);
+                            return;
+                        }
+                        this.generateList(result.StudentDtos);
+                    }
+                },
+                error: (error) => {
+                    this.sendError(error, data["format"]);
+                }
+            })
+        }
+
+        function addStudent() {
+            let data = {};
+            let format;
+            if ($("#name").val() != "") data["name"] = $("#name").val();
+            var num = $("#number").val()
+            if (num != "") {
+                if (/\+375\d{2}\d{3}\d{2}\d{2}$/.test(num)) {
+                    data["number"] = num;
+                }
+                else {
+                    $("#result2").html('Error: Number is not correct');
+                    return;
+                }
+            }
+
+            var ele = document.getElementsByName('format');
+            for (i = 0; i < ele.length; i++) {
+                if (ele[i].checked) format = ele[i].value;
+            }
+            var apiUrl = "/api/Students." + format;
+
+            $.ajax({
+                url: apiUrl,
+                data: JSON.stringify(data),
+                type: "POST",
+                contentType: format === "xml" ? "application/xml" : "application/json",
+                success: result => {
+                    if (format == "xml") {
+                        var xmlText = new XMLSerializer().serializeToString(result);
+                        $("#result2").html(xmlText);
+                    }
+                    else {
+                        $("#result2").html(JSON.stringify(result));
+                    }
+                    getStudents();
+                },
+                error: (error) => {
+                    this.sendError(error, data["format"]);
+                }
+            })
+        }
+
+        function send(href, method) {
+            let data = {};
+            let format;
+            console.log(href);
+            let input = href;
+            var parts = input.split('/');
+            var digit = parts[parts.length - 1];
+            console.log(digit)
+            data["id"] = digit;
+            var ele = document.getElementsByName('format');
+            for (i = 0; i < ele.length; i++) {
+                if (ele[i].checked)
+                    format = ele[i].value;
+            }
+
+            data["columns"] = '';
+            ele = document.getElementsByName('columnId');
+            if (ele[0].checked) data["columns"] += 'id,';
+            ele = document.getElementsByName('columnName');
+            if (ele[0].checked) data["columns"] += 'name,';
+            ele = document.getElementsByName('columnNumber');
+            if (ele[0].checked) data["columns"] += 'number';
+
+            var columnsParam = encodeURIComponent(data["columns"]);
+
+            var fullUrl = href + '?' + 'columns=' + columnsParam;
+
+            if (method == 'PUT') {
+                if ($("#name" + digit)) data["name"] = $("#name" + digit).val();
+                if ($("#number" + digit)) data["number"] = $("#number" + digit).val();
+            }
+
+
+            $.ajax({
+                url: fullUrl,
+                data: JSON.stringify(data),
+                type: method,
+                contentType: format === "xml" ? "application/xml" : "application/json",
+                success: result => {
+                    console.log(href);
+                    console.log(result);
+                    if (format == "xml") {
+
+                        var stringWriter = new XMLSerializer();
+                        var serializedXml = stringWriter.serializeToString(result);
+
+                        $("#result2").text(serializedXml);
+                    }
+                    else {
+                        $("#result2").html(JSON.stringify(result));
+                    }
+                    getStudents();
+                },
+                error: (error) => {
+                    this.sendError(error, data["format"]);
+                }
+            })
+        }
+
+        function sendError(error, type) {
+            if (type == "xml") {
+                var obj = {};
+                $(error.responseXML).find("Error").each(function (el) {
+                    obj.Code = $(this).find('Code').text();
+                    obj.Link = {};
+                    $(this).find('Link').each(function (e) {
+                        obj.Link.Href = $(this).find('Href').text();
+                        obj.Link.Method = $(this).find('Method').text();
+                        obj.Link.Message = $(this).find('Message').text();
+                    });
+                });
+
+                var xmlText = new XMLSerializer().serializeToString(error.responseXML);
+                $("#result").html(xmlText);
+                $.ajax({
+                    url: obj.Link.Href,
+                    type: obj.Link.Method,
+                    contentType: type === "xml" ? "application/xml" : "application/json",
+                    success: result => {
+                        var xmlText = new XMLSerializer().serializeToString(result);
+                        $("#result2").html(xmlText);
+                    },
+                    error: (error) => {
+                        $("#result2").html(error.responseText);
+                    }
+                })
+            }
+            else {
+                $("#result").html(error.responseText);
+                $.ajax({
+                    url: error.responseJSON.Link.Href,
+                    type: error.responseJSON.Link.Method,
+                    contentType: type === "xml" ? "application/xml" : "application/json",
+                    success: result => {
+                        $("#result2").html(JSON.stringify(result));
+                    },
+                    error: (error) => {
+                        $("#result2").html(error.responseText);
+                    }
+                })
+
+            }
+        }
+
+        function generateList(result) {
+            var htmlCode = "";
+            let format;
+
+            var ele = document.getElementsByName('format');
+            for (i = 0; i < ele.length; i++) {
+                if (ele[i].checked)
+                    format = ele[i].value;
+            }
+
+            if (result.length == 0) {
+                htmlCode += "<p>not found</p>";
+            } else if (format == "json") {
+                result.forEach(el => {
+                    let input = el.Links[1].Href;
+                    var parts = input.split('/');
+                    var id = parts[parts.length - 1];
+                    console.log(id)
+                    htmlCode += "<p>";
+                    if (el.Id) htmlCode += "Id: " + el.Id;
+                    if (el.Name) htmlCode += " Name: " + el.Name;
+                    if (el.Number) htmlCode += " Number: " + el.Number;
+                    if (el.Name) htmlCode += "</br>Name: <input style=\"margin: 3px;\" type=\"text\" id=\"name" + id + "\" value=\"" + el.Name + "\"/>";
+                    if (el.Number) htmlCode += "</br>Number: <input style=\"margin: 3px;\" type=\"text\" id=\"number" + id + "\" value=\"" + el.Number + "\"/>";
+
+                    var myUri = input.replace(/\/(\d+)$/, "." + format + "/$1");
+
+                    htmlCode += "</br>";
+                    htmlCode += "<button style=\"margin: 2px;\" onclick=\"send('" + myUri + "','" + el.Links[0].Method + "')\">Get</button>" + `Method: ${el.Links[0].Method}, URI: ${myUri}</br>`;
+                    htmlCode += "<button style=\"margin: 2px;\" onclick=\"send('" + myUri + "','" + el.Links[1].Method + "')\">Update</button>" + `Method: ${el.Links[1].Method}, URI: ${myUri}</br>`;
+                    htmlCode += "<button style=\"margin: 2px;\" onclick=\"send('" + myUri + "','" + el.Links[2].Method + "')\">Delete</button>" + `Method: ${el.Links[2].Method}, URI: ${myUri}</br>`;
+
+                    htmlCode += "</p>";
+                })
+            } else if (format === "xml") {
+                let students = result.querySelectorAll("ArrayOfStudentDto StudentDto");
+
+                console.log("Number of students:", students.length);
+
+                for (let i = 0; i < students.length; i++) {
+                    let student = students[i];
+                    let idElement = student.querySelector("Id");
+                    let nameElement = student.querySelector("Name");
+                    let numberElement = student.querySelector("Number");
+                    let links = student.querySelectorAll("Link");
+
+                    let id = idElement ? idElement.textContent : "N/A";
+                    let name = nameElement ? nameElement.textContent : "N/A";
+                    let number = numberElement ? numberElement.textContent : "N/A";
+
+                    console.log("Student:", id, name, number);
+
+                    htmlCode += "<p>";
+                    if (idElement) htmlCode += "Id: " + id;
+                    if (nameElement) htmlCode += " Name: " + name;
+                    if (numberElement) htmlCode += " Number: " + number;
+                    if (nameElement) htmlCode += "</br>Name: <input style=\"margin: 3px;\" type=\"text\" id=\"name" + id + "\" value=\"" + name + "\"/>";
+                    if (numberElement) htmlCode += "</br>Number: <input style=\"margin: 3px;\" type=\"text\" id=\"number" + id + "\" value=\"" + number + "\"/>";
+                    htmlCode += "</br>";
+
+                    links.forEach(link => {
+                        let href = link.querySelector("Href").textContent.replace(/\/(\d+)$/, "." + format + "/$1");
+                        let method = link.querySelector("Method").textContent;
+
+                        console.log("Link:", href, method);
+
+                        htmlCode += "<button style=\"margin: 2px;\" onclick=\"send('" + href + "','" + method + "')\">" + method + "</button>" + `Method: ${method}, URI: ${href}</br>`;
+                    });
+
+                    htmlCode += "</p>";
+                }
+            }
+
+            htmlCode += "<p><button style=\"margin: 5px;\" onclick=\"prev()\"><--</button>";
+            htmlCode += "<button style=\"margin: 5px;\" onclick=\"next()\">--></button></p>";
+
+            $("#result").html(htmlCode);
+        }
+
+        function prev() {
+            this.page -= 1;
+            if (this.page < 0) this.page = 0;
+            this.getStudents();
+        }
+
+        function next() {
+            this.page += 1;
+            this.getStudents();
+        }
+    </script>
+</body>
+</html>
