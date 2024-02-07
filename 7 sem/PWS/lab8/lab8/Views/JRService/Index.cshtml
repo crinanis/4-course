@@ -1,0 +1,84 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>lab8</title>
+    <meta charset="utf-8" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#form1").submit(function (event) {
+                event.preventDefault();
+                Ajax();
+                $("#jsonResult").text("");
+            });
+
+            $("#myButton").click(function () {
+                $.ajax({
+                    url: "/JRService/ContinueRequests",
+                    type: 'GET',
+                });
+            });
+
+            function Ajax() {
+                let data = {
+                    Id: parseInt($("#id").val()),
+                    Jsonrpc: "2.0",
+                    Method: $("#method").val(),
+                    Params: {
+                        Key: parseInt($("#key").val()),
+                        Value: parseInt($("#val").val())
+                    }
+                };
+                $.ajax({
+                    url: "/JRService/Single",
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data),
+                    success: result => {
+                        $("#result").val(result.Result);
+                        if (result.Error) $("#jsonResult").text(JSON.stringify(result.Error.Message));
+                    },
+                    error: error => {
+                        console.log(error);
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <form id="form1">
+        <div>
+            <div>
+                <p>Id: <input type="number" id="id" value="1" /></p>
+                <p>
+                    Method:
+                    <select id="method">
+                        <option value=""></option>
+                        <option value="SetM">SetM</option>
+                        <option value="GetM">GetM</option>
+                        <option value="AddM">AddM</option>
+                        <option value="SubM">SubM</option>
+                        <option value="MulM">MulM</option>
+                        <option value="DivM">DivM</option>
+                        <option value="Exit">Exit</option>
+                    </select>
+                </p>
+                <p>Key: <input type="number" id="key" value="1" /></p>
+                <p>Value: <input type="number" id="val" value="1" /></p>
+                <p><input type="submit" value="Submit" /></p>
+            </div>
+            <div>
+                <p>Result: <input type="text" id="result" /></p>
+                <div id="jsonResult"></div>
+            </div>
+        </div>
+    </form>
+    <button id="myButton">Continue sending requests</button>
+</body>
+</html>
