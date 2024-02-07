@@ -1,0 +1,11 @@
+D:\1POIT\4\PWS\lab5\Host\bin\Debug\Host.exe.config
+D:\1POIT\4\PWS\lab5\Host\bin\Debug\Host.exe
+D:\1POIT\4\PWS\lab5\Host\bin\Debug\Host.pdb
+D:\1POIT\4\PWS\lab5\Host\bin\Debug\lab5.dll
+D:\1POIT\4\PWS\lab5\Host\bin\Debug\lab5.pdb
+D:\1POIT\4\PWS\lab5\Host\bin\Debug\lab5.dll.config
+D:\1POIT\4\PWS\lab5\Host\obj\Debug\Host.csproj.AssemblyReference.cache
+D:\1POIT\4\PWS\lab5\Host\obj\Debug\Host.csproj.CoreCompileInputs.cache
+D:\1POIT\4\PWS\lab5\Host\obj\Debug\Host.csproj.CopyComplete
+D:\1POIT\4\PWS\lab5\Host\obj\Debug\Host.exe
+D:\1POIT\4\PWS\lab5\Host\obj\Debug\Host.pdb
