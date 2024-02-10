@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    
+    <welcome-file-list>
+        <welcome-file>sendMail.jsp</welcome-file>
+    </welcome-file-list>
+    
+    <context-param>
+        <param-name>mailHost</param-name>
+        <param-value>smtp.yandex.ru</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mailPort</param-name>
+        <param-value>465</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mailHostImap</param-name>
+        <param-value>imap.yandex.ru</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mailPortImap</param-name>
+        <param-value>993</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mailUser</param-name>
+        <param-value>your_mail</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mailPassword</param-name>
+        <param-value>your_app_password</param-value>
+    </context-param>
+</web-app>
